@@ -46,7 +46,7 @@ def rate_features(df):
 
 
 def print_feature_scores(scores):
-    df = pd.DataFrame({'features': features_int2name, 'scores': scores})
+    df = pd.DataFrame({'features': features_listed, 'scores': scores})
 
     sorted_df = df.sort_values(by='scores')
     y_range = range(1, len(df.index) + 1)

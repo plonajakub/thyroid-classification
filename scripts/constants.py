@@ -23,12 +23,14 @@ features_name2int = {
     't4u': 20,
     'fti': 21
 }
-features_int2name = np.array(list(features_name2int.keys()))
-data_column_names = np.append(features_int2name, 'class')
+features_listed = np.array(list(features_name2int.keys()))
+features_int2name = np.array([None] + list(features_name2int.keys()))
+data_column_names = np.append(features_listed, 'class')
 
 classes_name2int = {
     'normal_condition': 1,
     'hyperthyroidism': 2,
     'hypothyroidism': 3
 }
-classes_int2name = np.array(list(classes_name2int.keys()))
+classes_listed = np.array(list(classes_name2int.keys()))
+classes_int2name = np.array([None] + list(classes_name2int.keys()))
