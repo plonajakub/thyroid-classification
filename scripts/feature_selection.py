@@ -53,7 +53,8 @@ def rate_features_mutual_info(df, discrete_features_indexes):
     df_values = df.values
     features = df_values[:, 0:-1]
     labels = df_values[:, -1]
-    score_func = partial(mutual_info_classif, discrete_features=discrete_features_indexes)
+    score_func = partial(mutual_info_classif,
+                         discrete_features=discrete_features_indexes)
     select_k_best = SelectKBest(score_func=score_func, k='all')
     result = select_k_best.fit(features, labels)
     return result.scores_
@@ -79,7 +80,8 @@ def print_feature_scores(features, scores, title, xlabel):
     plt.plot(sorted_df['scores'], y_range, "o")
     plt.grid(True)
     for (_, row), y in zip(sorted_df.iterrows(), y_range):
-        plt.annotate('%.2g' % row['scores'], (row['scores'] + max(scores) / 50, y - 0.15))
+        plt.annotate('%.2g' % row['scores'],
+                     (row['scores'] + max(scores) / 50, y - 0.15))
 
     plt.yticks(y_range, sorted_df['features'])
     plt.title(title, loc='left')
@@ -96,23 +98,32 @@ def main():
 
     # ANOVA all
     scores_all = rate_features_anova(all_df)
-    print_feature_scores(features_int2name, scores_all, title="ANOVA", xlabel='F')
+    print_feature_scores(features_int2name, scores_all,
+                         title="ANOVA", xlabel='F')
 
     # ANOVA only continuous
-    all_df_continuous = all_df.iloc[:, np.append(features_continuous_indexes, -1)]
-    labels_continuous = [features_int2name[i] for i in features_continuous_indexes]
+    all_df_continuous = all_df.iloc[:, np.append(
+        features_continuous_indexes, -1)]
+    labels_continuous = [features_int2name[i]
+                         for i in features_continuous_indexes]
     scores_continuous = rate_features_anova(all_df_continuous)
-    print_feature_scores(labels_continuous, scores_continuous, title="ANOVA", xlabel='F')
+    print_feature_scores(
+        labels_continuous, scores_continuous, title="ANOVA", xlabel='F')
 
     # Mutual information (MI) all
-    scores_mi_all = rate_features_mutual_info(all_df, discrete_features_indexes=features_categorical_indexes)
-    print_feature_scores(features_int2name, scores_mi_all, title="Mutual information", xlabel='mi')
+    scores_mi_all = rate_features_mutual_info(
+        all_df, discrete_features_indexes=features_categorical_indexes)
+    print_feature_scores(features_int2name, scores_mi_all,
+                         title="Mutual information", xlabel='mi')
 
     # chi2 only categorical
-    all_df_categorical = all_df.iloc[:, np.append(features_categorical_indexes, -1)]
-    labels_categorical = [features_int2name[i] for i in features_categorical_indexes]
+    all_df_categorical = all_df.iloc[:, np.append(
+        features_categorical_indexes, -1)]
+    labels_categorical = [features_int2name[i]
+                          for i in features_categorical_indexes]
     scores_categorical = rate_features_chi2(all_df_categorical)
-    print_feature_scores(labels_categorical, scores_categorical, title="Chi2", xlabel='chi2')
+    print_feature_scores(labels_categorical,
+                         scores_categorical, title="Chi2", xlabel='chi2')
 
 
 if __name__ == '__main__':
