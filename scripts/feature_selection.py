@@ -1,43 +1,13 @@
-import pandas as pd
 import matplotlib.pyplot as plt
 from functools import partial
 
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import f_classif
-from sklearn.feature_selection import mutual_info_classif
-from sklearn.feature_selection import chi2
+import numpy as np
+import pandas as pd
 
-from constants import *
+from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif, chi2
 
-
-def load_data(verbose=False):
-    train_df = pd.read_csv('../data/ann-train.data', sep=' ', header=None)
-    train_df = train_df.drop(train_df.columns[[22, 23]], axis=1)
-    train_df.columns = data_column_names
-
-    pd.set_option('display.max_columns', None)
-    if verbose:
-        print('###### ann-train.data - data ######')
-        print(train_df)
-        print('###### ann-train.data - types ######')
-        print(train_df.dtypes)
-        print('###### ann-train.data - statistics ######')
-        print(train_df.describe())
-
-    test_df = pd.read_csv('../data/ann-test.data', sep=' ', header=None)
-    test_df = test_df.drop(test_df.columns[[22, 23]], axis=1)
-    test_df.columns = data_column_names
-
-    if verbose:
-        print('###### ann-test.data - data ######')
-        print(test_df)
-        print('###### ann-test.data - types ######')
-        print(test_df.dtypes)
-        print('###### ann-test.data - statistics ######')
-        print(test_df.describe())
-    pd.set_option('display.max_columns', 0)
-
-    return train_df, test_df
+from data_services import load_data
+from constants import features_int2name, features_continuous_indexes, features_categorical_indexes
 
 
 def rate_features_anova(df):
