@@ -1,7 +1,7 @@
 import pandas as pd
 
 from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, cross_validate
 
 from feature_selection import rate_features_mutual_info
 from data_services import get_data
@@ -37,10 +37,11 @@ def train_and_test(params, debug=False):
         print(X)
 
     clf = MLPClassifier(solver='sgd', max_iter=params.max_iter, learning_rate=params.learning_rate,
-                        nesterovs_momentum=False)
+                        nesterovs_momentum=False, learning_rate_init=params.learning_rate_init)
 
     # experiments
-    results = pd.DataFrame(columns=['n_features', 'hidden_layer_size', 'with_momentum', 'score'])
+    results = pd.DataFrame(
+        columns=['n_features', 'hidden_layer_size', 'with_momentum', 'score'])
     i_ext = 1
     i_ext_max = params.n_features_limit * len(params.hidden_layer_sizes)
     for n_features in range(params.n_features_limit):
@@ -53,21 +54,23 @@ def train_and_test(params, debug=False):
             i_int = [1, 1]
             for i in range(params.n_experiments):
                 # sgd with momentum
-                print_iteration_info(i_ext, i_ext_max, n_features + 1, n, i_int[0], params.n_experiments, 'Y')
+                print_iteration_info(
+                    i_ext, i_ext_max, n_features + 1, n, i_int[0], params.n_experiments, 'Y')
                 clf.momentum = params.momentum
-                score = cross_val_score(
-                    clf, X_data, y, cv=2, scoring='accuracy', n_jobs=-1, verbose=3)
-                scores['with_momentum'].append(avg(score))
+                score = cross_validate(
+                    clf, X_data, y, cv=2, scoring='accuracy', n_jobs=-1, verbose=3, return_estimator=True)
+                scores['with_momentum'].append(avg(score['test_score']))
                 if debug:
                     print(score)
                 i_int[0] += 1
 
                 # sgd without momentum
-                print_iteration_info(i_ext, i_ext_max, n_features + 1, n, i_int[1], params.n_experiments, 'N')
+                print_iteration_info(
+                    i_ext, i_ext_max, n_features + 1, n, i_int[1], params.n_experiments, 'N')
                 clf.momentum = 0
-                score = cross_val_score(
-                    clf, X_data, y, cv=2, scoring='accuracy', n_jobs=-1, verbose=3)
-                scores['no_momentum'].append(avg(score))
+                score = cross_validate(
+                    clf, X_data, y, cv=2, scoring='accuracy', n_jobs=-1, verbose=3, return_estimator=True)
+                scores['no_momentum'].append(avg(score['test_score']))
                 if debug:
                     print(score)
                 i_int[1] += 1
