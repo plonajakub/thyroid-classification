@@ -1,7 +1,11 @@
 import pandas as pd
 
+from imblearn.combine import SMOTETomek
+from imblearn.over_sampling import SMOTENC, SMOTE
+from imblearn.pipeline import make_pipeline
+
 from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import cross_val_score, cross_validate
+from sklearn.model_selection import cross_validate
 
 from feature_selection import rate_features_mutual_info
 from data_services import get_data
@@ -45,6 +49,13 @@ def train_and_test(params, debug=False):
     i_ext = 1
     i_ext_max = params.n_features_limit * len(params.hidden_layer_sizes)
     for n_features in range(params.n_features_limit):
+        current_categorical_indexes = features_categorical_indexes[features_categorical_indexes < n_features]
+        if len(current_categorical_indexes) == 0:
+            smote = SMOTE(n_jobs=-1)
+        else:
+            smote = SMOTENC(categorical_features=current_categorical_indexes, n_jobs=-1)
+        smote_tomek = SMOTETomek(smote=smote, n_jobs=-1)
+        model = make_pipeline(smote_tomek, clf)
         X_data = X[:, range(n_features + 1)]
         if debug:
             print(X_data)
@@ -58,7 +69,7 @@ def train_and_test(params, debug=False):
                     i_ext, i_ext_max, n_features + 1, n, i_int[0], params.n_experiments, 'Y')
                 clf.momentum = params.momentum
                 score = cross_validate(
-                    clf, X_data, y, cv=2, scoring='accuracy', n_jobs=-1, verbose=3, return_estimator=True)
+                    model, X_data, y, cv=2, scoring='accuracy', n_jobs=-1, verbose=3, return_estimator=True)
                 scores['with_momentum'].append(avg(score['test_score']))
                 if debug:
                     print(score)
@@ -69,7 +80,7 @@ def train_and_test(params, debug=False):
                     i_ext, i_ext_max, n_features + 1, n, i_int[1], params.n_experiments, 'N')
                 clf.momentum = 0
                 score = cross_validate(
-                    clf, X_data, y, cv=2, scoring='accuracy', n_jobs=-1, verbose=3, return_estimator=True)
+                    model, X_data, y, cv=2, scoring='accuracy', n_jobs=-1, verbose=3, return_estimator=True)
                 scores['no_momentum'].append(avg(score['test_score']))
                 if debug:
                     print(score)

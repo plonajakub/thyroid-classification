@@ -1,5 +1,8 @@
 import pandas as pd
+from imblearn.over_sampling import SMOTENC
 from sklearn.preprocessing import StandardScaler
+import constants as const
+
 
 from constants import data_column_names, features_int2name
 
@@ -37,7 +40,7 @@ def load_data(verbose=False):
 def preprocess_data(df):
     df = make_unique(df)
     df = scale(df)
-    df = resample(df)
+    # df = resample(df)  # Only for debug!
     return df
 
 
@@ -59,8 +62,15 @@ def scale(df):
     return df
 
 
+# ONLY FOR DEBUG
+# DO NOT USE TO TRAIN (results in data leakage)
 def resample(df):
-    # TODO implement
+    X = df.values[:, 0:-1]
+    y = df.values[:, -1]
+    smotenc = SMOTENC(categorical_features=const.features_categorical_indexes, n_jobs=-1)
+    X_r, y_r = smotenc.fit_resample(X, y)
+    df = pd.DataFrame(columns=features_int2name, data=X_r)
+    df['class'] = y_r
     return df
 
 
