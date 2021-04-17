@@ -1,6 +1,5 @@
 import pandas as pd
 from imblearn.over_sampling import SMOTENC
-from sklearn.preprocessing import StandardScaler
 import constants as const
 
 
@@ -38,27 +37,9 @@ def load_data(verbose=False):
 
 
 def preprocess_data(df):
-    df = make_unique(df)
-    df = scale(df)
-    # df = resample(df)  # Only for debug!
-    return df
-
-
-def make_unique(df):
     df = df.drop_duplicates()  # regular duplicates
     df = df.drop_duplicates(subset=features_int2name, keep=False)  # conflicting data
-    return df
-
-
-def scale(df):
-    # TODO scale only continuous values
-    # X = df.values[:, 0:-1]
-    # y = df.values[:, -1]
-    # scaler = StandardScaler()
-    # scaler.fit(X)
-    # X = scaler.transform(X)
-    # df = pd.DataFrame(columns=features_int2name, data=X)
-    # df['class'] = y
+    df = df.sample(frac=1).reset_index(drop=True)
     return df
 
 
