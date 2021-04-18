@@ -45,12 +45,15 @@ def train_and_test(params):
         columns=['n_features', 'hidden_layer_size', 'with_momentum', 'scores_avg', 'scores_raw'])
     i_ext = 1
     i_ext_max = params.n_features_limit * len(params.hidden_layer_sizes)
+    current_categorical_indexes = []
     for n_features in range(params.n_features_limit):
-        current_categorical_indexes = features_categorical_indexes[features_categorical_indexes < n_features]
+        next_feature_idx = sorted_features_idx_list[n_features]
+        if next_feature_idx in features_categorical_indexes:
+            current_categorical_indexes.append(n_features)
         if len(current_categorical_indexes) == 0:
             smote = SMOTE(random_state=0, n_jobs=-1)
         else:
-            smote = SMOTENC(categorical_features=current_categorical_indexes, random_state=0, n_jobs=-1)
+            smote = SMOTENC(categorical_features=np.array(current_categorical_indexes), random_state=0, n_jobs=-1)
         smote_tomek = SMOTETomek(smote=smote, random_state=0, n_jobs=-1)
         X_data = X[:, range(n_features + 1)]
         for n in params.hidden_layer_sizes:
