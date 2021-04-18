@@ -14,8 +14,10 @@ def get_results():
         (results_df.shape[0], len(results_df['scores_raw'][0])))
     for idx, row in results_df.iterrows():
         results_np[idx, :] = np.array(row['scores_raw'])
+    results_np_table = np.concatenate((clfs_names_column, results_np), axis=1)
+    results_np_table = tabulate(results_np_table, floatfmt=".3f")
     print('\n##################### classifiers\' scores ######################')
-    print(results_np)
+    print(results_np_table)
     return results_np
 
 
