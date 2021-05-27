@@ -19,12 +19,12 @@ def rate_features_anova(df):
     return result.scores_
 
 
-def rate_features_mutual_info(df, discrete_features_indexes):
+def rate_features_mutual_info(df, discrete_features_indexes, random_state=None):
     df_values = df.values
     features = df_values[:, 0:-1]
     labels = df_values[:, -1]
     score_func = partial(mutual_info_classif,
-                         discrete_features=discrete_features_indexes)
+                         discrete_features=discrete_features_indexes, random_state=random_state)
     select_k_best = SelectKBest(score_func=score_func, k='all')
     result = select_k_best.fit(features, labels)
     return result.scores_

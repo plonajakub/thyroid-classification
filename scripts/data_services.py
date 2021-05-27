@@ -39,7 +39,7 @@ def load_data(verbose=False):
 def preprocess_data(df):
     df = df.drop_duplicates()  # regular duplicates
     df = df.drop_duplicates(subset=features_int2name, keep=False)  # conflicting data
-    df = df.sample(frac=1).reset_index(drop=True)
+    # df = df.sample(frac=1).reset_index(drop=True)
     return df
 
 

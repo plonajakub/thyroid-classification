@@ -38,9 +38,3 @@ classes_name2int = {
 }
 classes_listed = np.array(list(classes_name2int.keys()))
 classes_int2name = np.array([None] + list(classes_name2int.keys()))
-
-clfs_names_row = ["hl_5_with_momentum", "hl_5_no_momentum",
-                  "hl_25_with_momentum", "hl_25_no_momentum", "hl_125_with_momentum", "hl_125_no_momentum"]
-
-clfs_names_column = np.array([["hl_5_with_momentum"], ["hl_5_no_momentum"],
-                              ["hl_25_with_momentum"], ["hl_25_no_momentum"], ["hl_125_with_momentum"], ["hl_125_no_momentum"]])

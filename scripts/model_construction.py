@@ -1,3 +1,5 @@
+from typing import Any, List
+
 import numpy as np
 import pandas as pd
 
@@ -14,100 +16,88 @@ from feature_selection import rate_features_mutual_info
 from data_services import get_data
 from parameters import Parameters
 from constants import features_categorical_indexes, features_int2name
-from misc import avg
 
 
-def train_and_test(params):
+def create_ranking(verbose=False, random_state=None):
+    all_df = get_data()
+    feature_scores = rate_features_mutual_info(all_df, discrete_features_indexes=features_categorical_indexes,
+                                               random_state=random_state)
+    df = pd.DataFrame({'features': features_int2name, 'scores': feature_scores})
+    sorted_df = df.sort_values(by='scores', ascending=False)
+    if verbose:
+        print('####### Feature ranking #######')
+        print(sorted_df)
+    return sorted_df
+
+
+def train_and_test(params: Parameters, sorted_ranking_df):
     all_df = get_data()
     X = all_df.values[:, 0:-1]
     y = all_df.values[:, -1]
 
-    # feature ranking
-    feature_scores = rate_features_mutual_info(
-        all_df, discrete_features_indexes=features_categorical_indexes)
-    df = pd.DataFrame(
-        {'features': features_int2name, 'scores': feature_scores})
-
-    # sorting features and preparing data
-    sorted_df = df.sort_values(by='scores', ascending=False)
-    print('####### Feature ranking #######')
-    print(sorted_df)
-
-    sorted_features = sorted_df[:params.n_features_limit]
+    sorted_features = sorted_ranking_df[:params.n_features]
     sorted_features_idx_list = sorted_features.index.to_list()
     X = X[:, sorted_features_idx_list]
 
-    clf = MLPClassifier(solver='sgd', max_iter=params.max_iter, learning_rate=params.learning_rate,
-                        nesterovs_momentum=False, learning_rate_init=params.learning_rate_init)
+    clf = MLPClassifier(solver=params.solver, max_iter=params.max_iter, learning_rate=params.learning_rate,
+                        nesterovs_momentum=params.nesterovs_momentum, learning_rate_init=params.learning_rate_init,
+                        hidden_layer_sizes=params.hidden_layer_sizes, momentum=params.momentum)
 
-    # experiments
-    results = pd.DataFrame(
-        columns=['n_features', 'hidden_layer_size', 'with_momentum', 'scores_avg', 'scores_raw'])
-    i_ext = 1
-    i_ext_max = params.n_features_limit * len(params.hidden_layer_sizes)
-    current_categorical_indexes = []
-    for n_features in range(params.n_features_limit):
-        next_feature_idx = sorted_features_idx_list[n_features]
-        if next_feature_idx in features_categorical_indexes:
-            current_categorical_indexes.append(n_features)
+    if params.resample:
+        current_categorical_indexes = []
+        for i, feature_idx in enumerate(sorted_features_idx_list):
+            if feature_idx in features_categorical_indexes:
+                current_categorical_indexes.append(i)
+
         if len(current_categorical_indexes) == 0:
-            smote = SMOTE(random_state=0, n_jobs=-1)
+            smote = SMOTE(random_state=params.random_state, n_jobs=params.n_jobs)
         else:
-            smote = SMOTENC(categorical_features=np.array(current_categorical_indexes), random_state=0, n_jobs=-1)
-        smote_tomek = SMOTETomek(smote=smote, random_state=0, n_jobs=-1)
-        X_data = X[:, range(n_features + 1)]
-        for n in params.hidden_layer_sizes:
-            clf.hidden_layer_sizes = (n,)
-            scores = np.zeros((2, 2 * params.n_experiments))  # [0, x] - with_momentum
-            i_int = [1, 1]
-            for i in range(params.n_experiments):
-                # sgd with momentum
-                print_iteration_info(
-                    i_ext, i_ext_max, n_features + 1, n, i_int[0], params.n_experiments, 'Y')
-                clf.momentum = params.momentum
-                model = make_pipeline(smote_tomek, clf)
-                cv_res_m = cross_validate(
-                    clone(model), X_data, y, cv=2, scoring='accuracy', n_jobs=-1, verbose=3)
-                scores[0, i * 2:i * 2 + 2] = cv_res_m['test_score']
-                i_int[0] += 1
+            smote = SMOTENC(categorical_features=np.array(current_categorical_indexes),
+                            random_state=params.random_state, n_jobs=params.n_jobs)
+        smote_tomek = SMOTETomek(smote=smote, random_state=params.random_state, n_jobs=params.n_jobs)
+        model = make_pipeline(smote_tomek, clf)
+    else:
+        model = clf
 
-                # sgd without momentum
-                print_iteration_info(
-                    i_ext, i_ext_max, n_features + 1, n, i_int[1], params.n_experiments, 'N')
-                clf.momentum = 0
-                model = make_pipeline(smote_tomek, clf)
-                cv_res_nm = cross_validate(
-                    clone(model), X_data, y, cv=2, scoring='accuracy', n_jobs=-1, verbose=3)
-                scores[1, i * 2:i * 2 + 2] = cv_res_nm['test_score']
-                i_int[1] += 1
-            results = results.append({'n_features': n_features + 1, 'hidden_layer_size': n, 'with_momentum': True,
-                                      'scores_avg': np.mean(scores[0]), 'scores_raw': scores[0]}, ignore_index=True)
-            results = results.append({'n_features': n_features + 1, 'hidden_layer_size': n, 'with_momentum': False,
-                                      'scores_avg': np.mean(scores[1]), 'scores_raw': scores[1]}, ignore_index=True)
-            i_ext += 1
-    return results
+    X_data = X[:, range(params.n_features)]
+    scores = np.zeros(params.cv * params.n_experiments)
+
+    for i in range(params.n_experiments):
+        cv_res_m = cross_validate(
+            clone(model), X_data, y, cv=params.cv, scoring=params.scoring, n_jobs=params.n_jobs, verbose=params.verbose)
+        scores[i * params.cv: (i + 1) * params.cv] = cv_res_m['test_score']
+
+    return scores
 
 
-def print_iteration_info(i, i_max, n_features, hl_size, i_exp, i_exp_max, with_momentum):
-    info_string = '### iteration: %d/%d # n_features: %d # hl_size: %d # experiment: %d/%d # with_momentum: %s ###' % (
-        i, i_max, n_features, hl_size, i_exp, i_exp_max, with_momentum)
-    print(info_string)
-
-
-def save_best_results(results: DataFrame):
-    n_features_scored = results.groupby('n_features')['scores_avg'].mean()
-    best_n_features = int(n_features_scored.idxmax())
-    best_model = results[results['n_features'] == best_n_features]
-    best_model.to_pickle(path='../results/results_df.pickle')
+def test_param(name: str, values: List[Any], sorted_ranking_df):
+    print("Testing %s..." % name)
+    params = Parameters()
+    results = DataFrame()
+    for i, v in enumerate(values):
+        print("Tested value: %s; %d/%d" % (str(v), i + 1, len(values)))
+        setattr(params, name, v)
+        scores = train_and_test(params, sorted_ranking_df=sorted_ranking_df)
+        results = results.append(
+            {'param_value': v, 'scores_avg': np.mean(scores), 'scores_raw': scores},
+            ignore_index=True
+        )
+    print("Testing of %s has been completed!" % name)
+    results.to_pickle(path='../results/results_df_%s.pickle' % name)
+    results.to_excel('../results/%s.xlsx' % name)
+    results.to_csv(path_or_buf='../results/%s.csv' % name)
+    print("Results has been written!")
 
 
 def main():
-    base_params = Parameters()
-    results = train_and_test(base_params)
-    print('############# Final results ################')
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-        print(results.iloc[:, 0:-1])
-    save_best_results(results)
+    sorted_ranking_df = create_ranking(verbose=True, random_state=Parameters().random_state)
+
+    test_param('resample', [False, True], sorted_ranking_df=sorted_ranking_df)
+    test_param('n_features', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], sorted_ranking_df=sorted_ranking_df)
+    test_param('hidden_layer_sizes', [(5,), (25,), (125,), (625,), (3125,)], sorted_ranking_df=sorted_ranking_df)
+    test_param('learning_rate_init', [0.01, 0.1, 0.3, 0.6, 0.9, 1], sorted_ranking_df=sorted_ranking_df)
+    test_param('learning_rate', ['constant', 'invscaling', 'adaptive'], sorted_ranking_df=sorted_ranking_df)
+    test_param('momentum', [0, 0.2, 0.4, 0.6, 0.8, 1], sorted_ranking_df=sorted_ranking_df)
 
 
 if __name__ == '__main__':

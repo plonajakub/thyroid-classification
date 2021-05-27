@@ -75,3 +75,4 @@ venv/
 plots/
 .idea/**/csv-plugin.xml
 **/__pycache__/
+results/
