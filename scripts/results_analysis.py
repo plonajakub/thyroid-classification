@@ -2,7 +2,7 @@ from copy import copy
 
 import pandas as pd
 import numpy as np
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_rel
 from tabulate import tabulate
 
 
@@ -31,7 +31,7 @@ def analyze(results, names, param_title, alpha=0.05):
     # t-statistic and p value matrices
     for i in range(len(results)):
         for j in range(len(results)):
-            t_statistic[i, j], p_value[i, j] = ttest_ind(
+            t_statistic[i, j], p_value[i, j] = ttest_rel(
                 results[i], results[j])
 
     print_tabulate(t_statistic, names, '%s - t_statistic' % param_title)
