@@ -1,5 +1,3 @@
-from copy import copy
-
 import pandas as pd
 import numpy as np
 from scipy.stats import ttest_rel
@@ -50,6 +48,10 @@ def analyze(results, names, param_title, alpha=0.05):
     # statistically significantly better
     statistically_better = significance * advantage
     print_tabulate(statistically_better, names, '%s - statistically better' % param_title)
+
+    analysis_df = pd.DataFrame(columns=names, data=statistically_better, index=names)
+    analysis_df.to_excel('../analysis/%s.xlsx' % param_title)
+    analysis_df.to_csv(path_or_buf='../analysis/%s.csv' % param_title)
 
 
 def main():

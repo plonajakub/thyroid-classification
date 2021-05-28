@@ -6,7 +6,6 @@ import pandas as pd
 from imblearn.combine import SMOTETomek
 from imblearn.over_sampling import SMOTENC, SMOTE
 from imblearn.pipeline import make_pipeline
-from pandas import DataFrame
 from sklearn import clone
 
 from sklearn.neural_network import MLPClassifier
@@ -59,12 +58,10 @@ def train_and_test(params: Parameters, sorted_ranking_df):
     else:
         model = clf
 
-    X_data = X[:, range(params.n_features)]
     scores = np.zeros(params.cv * params.n_experiments)
-
     for i in range(params.n_experiments):
         cv_res_m = cross_validate(
-            clone(model), X_data, y, cv=params.cv, scoring=params.scoring, n_jobs=params.n_jobs, verbose=params.verbose)
+            clone(model), X, y, cv=params.cv, scoring=params.scoring, n_jobs=params.n_jobs, verbose=params.verbose)
         scores[i * params.cv: (i + 1) * params.cv] = cv_res_m['test_score']
 
     return scores
@@ -73,7 +70,7 @@ def train_and_test(params: Parameters, sorted_ranking_df):
 def test_param(name: str, values: List[Any], sorted_ranking_df):
     print("Testing %s..." % name)
     params = Parameters()
-    results = DataFrame()
+    results = pd.DataFrame()
     for i, v in enumerate(values):
         print("Tested value: %s; %d/%d" % (str(v), i + 1, len(values)))
         setattr(params, name, v)
