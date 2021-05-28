@@ -91,10 +91,10 @@ def main():
 
     test_param('resample', [False, True], sorted_ranking_df=sorted_ranking_df)
     test_param('n_features', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], sorted_ranking_df=sorted_ranking_df)
-    test_param('hidden_layer_sizes', [(5,), (25,), (125,), (625,), (3125,)], sorted_ranking_df=sorted_ranking_df)
+    test_param('hidden_layer_sizes', [(5,), (25,), (100,), (500,), (1000,)], sorted_ranking_df=sorted_ranking_df)
     test_param('learning_rate_init', [0.01, 0.1, 0.3, 0.6, 0.9, 1], sorted_ranking_df=sorted_ranking_df)
     test_param('learning_rate', ['constant', 'invscaling', 'adaptive'], sorted_ranking_df=sorted_ranking_df)
-    test_param('momentum', [0, 0.2, 0.4, 0.6, 0.8, 1], sorted_ranking_df=sorted_ranking_df)
+    test_param('momentum', [0, 0.2, 0.4, 0.6, 0.8, 0.9, 1], sorted_ranking_df=sorted_ranking_df)
 
 
 if __name__ == '__main__':

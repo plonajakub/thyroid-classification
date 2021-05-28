@@ -9,7 +9,7 @@ class Parameters:
         self.momentum = 0.9
 
         # Tests accuracy
-        self.max_iter = 10000
+        self.max_iter = 1_000_000_000
         self.n_experiments = 5
 
         # Misc params
