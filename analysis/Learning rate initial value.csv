@@ -1,0 +1,7 @@
+,learning_rate_init_0.01,learning_rate_init_0.1,learning_rate_init_0.3,learning_rate_init_0.6,learning_rate_init_0.9,learning_rate_init_1.0
+learning_rate_init_0.01,0.0,0.0,0.0,0.0,1.0,1.0
+learning_rate_init_0.1,0.0,0.0,0.0,0.0,1.0,1.0
+learning_rate_init_0.3,0.0,0.0,0.0,0.0,1.0,1.0
+learning_rate_init_0.6,0.0,0.0,0.0,0.0,1.0,1.0
+learning_rate_init_0.9,0.0,0.0,0.0,0.0,0.0,0.0
+learning_rate_init_1.0,0.0,0.0,0.0,0.0,0.0,0.0

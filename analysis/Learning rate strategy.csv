@@ -1,0 +1,4 @@
+,learning_rate_constant,learning_rate_invscaling,learning_rate_adaptive
+learning_rate_constant,0.0,1.0,0.0
+learning_rate_invscaling,0.0,0.0,0.0
+learning_rate_adaptive,1.0,1.0,0.0
