@@ -76,7 +76,7 @@ def test_param(name: str, values: List[Any], sorted_ranking_df):
         setattr(params, name, v)
         scores = train_and_test(params, sorted_ranking_df=sorted_ranking_df)
         results = results.append(
-            {'param_value': v, 'scores_avg': np.mean(scores), 'scores_raw': scores},
+            {'param_value': v, 'scores_avg': np.mean(scores), 'scores_std': np.std(scores), 'scores_raw': scores},
             ignore_index=True
         )
     print("Testing of %s has been completed!" % name)
